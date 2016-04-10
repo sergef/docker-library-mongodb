@@ -1,4 +1,5 @@
-FROM %DOCKER_REGISTRY%docker-library-alpine
+FROM debian:jessie
+# %DOCKER_REGISTRY%docker-library-alpine
 
 ENV DB_USER mongodb
 ENV DB_PASSWORD mongodb
@@ -17,27 +18,32 @@ EXPOSE $MONGODB_PORT
 VOLUME $DB_MOUNTPOINT
 RUN mkdir -p $DB_MOUNTPOINT
 
-# https://circle-artifacts.com/gh/andyshinn/alpine-pkg-glibc/6/artifacts/0/home/ubuntu/alpine-pkg-glibc/packages/x86_64/glibc-2.21-r2.apk
-COPY glibc-2.21-r2.apk /tmp/glibc-2.21-r2.apk
-# https://circle-artifacts.com/gh/andyshinn/alpine-pkg-glibc/6/artifacts/0/home/ubuntu/alpine-pkg-glibc/packages/x86_64/glibc-bin-2.21-r2.apk
-COPY glibc-bin-2.21-r2.apk /tmp/glibc-bin-2.21-r2.apk
+# # https://circle-artifacts.com/gh/andyshinn/alpine-pkg-glibc/6/artifacts/0/home/ubuntu/alpine-pkg-glibc/packages/x86_64/glibc-2.21-r2.apk
+# COPY glibc-2.21-r2.apk /tmp/glibc-2.21-r2.apk
+# # https://circle-artifacts.com/gh/andyshinn/alpine-pkg-glibc/6/artifacts/0/home/ubuntu/alpine-pkg-glibc/packages/x86_64/glibc-bin-2.21-r2.apk
+# COPY glibc-bin-2.21-r2.apk /tmp/glibc-bin-2.21-r2.apk
+#
+# RUN apk update \
+#   && apk add \
+#     ca-certificates \
+#     libgcc \
+#     libstdc++ \
+#     tar \
+#   && apk add --allow-untrusted /tmp/glibc-2.21-r2.apk \
+#   && apk add --allow-untrusted /tmp/glibc-bin-2.21-r2.apk \
+#   && /usr/glibc/usr/bin/ldconfig /lib /usr/glibc/usr/lib
 
-RUN apk update \
-  && apk add \
-    ca-certificates \
-    libgcc \
-    libstdc++ \
-    tar \
-  && apk add --allow-untrusted /tmp/glibc-2.21-r2.apk \
-  && apk add --allow-untrusted /tmp/glibc-bin-2.21-r2.apk \
-  && /usr/glibc/usr/bin/ldconfig /lib /usr/glibc/usr/lib
+# ADD https://fastdl.mongodb.org/linux/mongodb-linux-x86_64-${MONGODB_VERSION}.tgz /tmp
 
-ADD https://fastdl.mongodb.org/linux/mongodb-linux-x86_64-${MONGODB_VERSION}.tgz /tmp
+# RUN tar -xzf /tmp/mongodb-linux-x86_64-${MONGODB_VERSION}.tgz --strip 1 -C /usr
+#  && rm -rf /tmp/* /var/cache/apk/*
 
-RUN tar -xzf /tmp/mongodb-linux-x86_64-${MONGODB_VERSION}.tgz --strip 1 -C /usr \
-  && rm -rf /tmp/* /var/cache/apk/*
+RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv EA312927
+RUN echo "deb http://repo.mongodb.org/apt/debian wheezy/mongodb-org/3.2 main" | tee /etc/apt/sources.list.d/mongodb-org-3.2.list
+RUN apt-get update
+RUN apt-get install -y mongodb-org
 
-ENTRYPOINT rm /data/db/mongod.lock || true
+ENTRYPOINT rm /data/db/mongod.lock || true \
   /usr/bin/mongod \
     --dbpath $DB_MOUNTPOINT \
     --port $MONGODB_PORT \
