@@ -30,5 +30,5 @@ RUN tar -xzf /tmp/mongodb-linux-x86_64-${MONGODB_VERSION}.tgz --strip 1 -C /usr 
  && rm -rf /tmp/* /var/cache/apk/*
 
 ENTRYPOINT /usr/bin/mongod \
-    --port $MONGODB_PORT \
-    $MONGODB_ARGS
+  --port $MONGODB_PORT \
+  $MONGODB_ARGS
